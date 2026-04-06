@@ -53,31 +53,6 @@ where $B_\tau$ denotes a standard $r$-dimensional Wiener process and $\varrho$ i
 The remainder of this paper is organized as follows. Section~\ref{sec:preliminaries} reviews essential background on filtered probability spaces, It\^{o} integrals, and the Fokker--Planck equation. Section~\ref{sec:discretization} analyzes discretization schemes for \eqref{eq:langevin} and their ergodic properties. Section~\ref{sec:convergence} presents our main convergence results. Section~\ref{sec:numerical} provides numerical experiments, and Section~\ref{sec:conclusion} concludes.
 
 %% ============================================================
-\section{Preliminaries and Notation}
-\label{sec:preliminaries}
-
-Let $(\Xi, \mathcal{G}, \{\mathcal{G}_\tau\}_{\tau \geq 0}, \mathbb{Q})$ be a filtered probability space satisfying the usual conditions of right-continuity and completeness \cite{karlin1975}. We denote by $L^2(\Xi)$ the space of square-integrable random variables and by $\mathfrak{B}(\mathbb{R}^r)$ the Borel $\sigma$-algebra on $\mathbb{R}^r$.
-
-\subsection{It\^{o} Stochastic Integrals}
-
-Consider an $r$-dimensional Wiener process $B = \{B_\tau\}_{\tau \geq 0}$ adapted to $\{\mathcal{G}_\tau\}$. For a $\mathcal{G}_\tau$-adapted process $\phi$ satisfying $\mathbb{E}\!\left[\int_0^{\mathscr{T}} |\phi_u|^2\, du\right] < \infty$, the It\^{o} integral
-\begin{equation}\label{eq:ito_integral}
-  \mathcal{J}(\phi) = \int_0^{\mathscr{T}} \phi_u\, dB_u
-\end{equation}
-is well defined as an $L^2$ limit of Riemann-type sums \cite{ito1951}. The resulting process is a martingale with quadratic variation $\langle \mathcal{J}(\phi) \rangle_{\mathscr{T}} = \int_0^{\mathscr{T}} |\phi_u|^2\, du$.
-
-A key distinction from the Stratonovich integral \cite{stratonovich1966} arises via the It\^{o} formula: for $\psi \in C^2(\mathbb{R}^r)$ and an It\^{o} process $\Theta_\tau$ satisfying
-\begin{equation}\label{eq:general_sde}
-  d\Theta_\tau = \mathfrak{a}(\Theta_\tau, \tau)\, d\tau + \mathfrak{b}(\Theta_\tau, \tau)\, dB_\tau,
-\end{equation}
-we have
-\begin{equation}\label{eq:ito_formula}
-  d\psi(\Theta_\tau) = \left(\frac{\partial \psi}{\partial \tau} + \mathcal{A}\psi\right) d\tau + \nabla \psi \cdot \mathfrak{b}\, dB_\tau,
-\end{equation}
-where $\mathcal{A}$ is the infinitesimal generator
-\begin{equation}\label{eq:generator}
-  \mathcal{A}\psi = \mathfrak{a} \cdot \nabla \psi + \frac{1}{2}\text{tr}\!\left(\mathfrak{b} \mathfrak{b}^{\!\top} \nabla^2 \psi\right).
-\end{equation}
 
 \subsection{The Fokker--Planck Equation}
 
