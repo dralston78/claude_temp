@@ -40,15 +40,15 @@ Stochastic processes, Markov chain Monte Carlo, stochastic differential equation
 \section{Introduction}
 \IEEEPARstart{S}{tochastic} processes form the mathematical backbone of numerous disciplines ranging from statistical physics \cite{einstein1905, langevin1908} to quantitative finance \cite{black1973} and computational biology \cite{gillespie1977}. The rigorous axiomatization by Kolmogorov \cite{kolmogorov1933} provided the measure-theoretic foundation upon which modern probability theory rests, while subsequent developments by Wiener \cite{wiener1923}, Doob \cite{doob1942}, and It\^{o} \cite{ito1951} established the analytical machinery for continuous-time stochastic calculus.
 
-A central theme in applied probability is the characterization of long-run behavior. Given a stochastic process $\{X_t\}_{t \geq 0}$ evolving on a state space $\mathcal{S}$, one often seeks to determine whether the law of $X_t$ converges to a stationary distribution $\pi$ as $t \to \infty$, and if so, at what rate. This question is of direct practical importance in Markov chain Monte Carlo (MCMC) methods \cite{metropolis1953, hastings1970}, where the convergence rate of the simulated chain governs the efficiency of the sampling algorithm.
+A central theme in applied probability is the characterization of long-run behavior. Given a stochastic process $\{\Theta_\tau\}_{\tau \geq 0}$ evolving on a state space $\mathcal{E}$, one often seeks to determine whether the law of $\Theta_\tau$ converges to a stationary distribution $\varrho$ as $\tau \to \infty$, and if so, at what rate. This question is of direct practical importance in Markov chain Monte Carlo (MCMC) methods \cite{metropolis1953, hastings1970}, where the convergence rate of the simulated chain governs the efficiency of the sampling algorithm.
 
 The Metropolis--Hastings algorithm \cite{metropolis1953, hastings1970} and its variants, including Gibbs sampling \cite{geman1984}, remain the workhorses of Bayesian computation \cite{robert2004}. Despite decades of study, fundamental questions about optimal tuning, dimensional scaling, and the interaction between proposal mechanisms and target geometry continue to attract research attention. Recent advances in gradient-based samplers, particularly those inspired by Langevin dynamics \cite{langevin1908}, have opened new avenues for constructing efficient MCMC algorithms in high-dimensional settings.
 
 In this paper, we adopt a unified perspective grounded in the theory of stochastic differential equations (SDEs) \cite{oksendal2003, gardiner2009}. We consider the overdamped Langevin diffusion
 \begin{equation}\label{eq:langevin}
-  dX_t = \nabla \log \pi(X_t)\, dt + \sqrt{2}\, dW_t,
+  d\Theta_\tau = \nabla \log \varrho(\Theta_\tau)\, d\tau + \sqrt{2}\, dB_\tau,
 \end{equation}
-where $W_t$ denotes a standard $d$-dimensional Wiener process and $\pi$ is the target density. Under mild regularity conditions, this diffusion admits $\pi$ as its unique invariant measure, and trajectories converge to stationarity at an exponential rate determined by the spectral gap of the associated generator \cite{vanKampen2007}.
+where $B_\tau$ denotes a standard $r$-dimensional Wiener process and $\varrho$ is the target density. Under mild regularity conditions, this diffusion admits $\varrho$ as its unique invariant measure, and trajectories converge to stationarity at an exponential rate determined by the spectral gap of the associated generator \cite{vanKampen2007}.
 
 The remainder of this paper is organized as follows. Section~\ref{sec:preliminaries} reviews essential background on filtered probability spaces, It\^{o} integrals, and the Fokker--Planck equation. Section~\ref{sec:discretization} analyzes discretization schemes for \eqref{eq:langevin} and their ergodic properties. Section~\ref{sec:convergence} presents our main convergence results. Section~\ref{sec:numerical} provides numerical experiments, and Section~\ref{sec:conclusion} concludes.
 
@@ -56,40 +56,40 @@ The remainder of this paper is organized as follows. Section~\ref{sec:preliminar
 \section{Preliminaries and Notation}
 \label{sec:preliminaries}
 
-Let $(\Omega, \mathcal{F}, \{\mathcal{F}_t\}_{t \geq 0}, \mathbb{P})$ be a filtered probability space satisfying the usual conditions of right-continuity and completeness \cite{karlin1975}. We denote by $L^2(\Omega)$ the space of square-integrable random variables and by $\mathcal{B}(\mathbb{R}^d)$ the Borel $\sigma$-algebra on $\mathbb{R}^d$.
+Let $(\Xi, \mathcal{G}, \{\mathcal{G}_\tau\}_{\tau \geq 0}, \mathbb{Q})$ be a filtered probability space satisfying the usual conditions of right-continuity and completeness \cite{karlin1975}. We denote by $L^2(\Xi)$ the space of square-integrable random variables and by $\mathfrak{B}(\mathbb{R}^r)$ the Borel $\sigma$-algebra on $\mathbb{R}^r$.
 
 \subsection{It\^{o} Stochastic Integrals}
 
-Consider a $d$-dimensional Wiener process $W = \{W_t\}_{t \geq 0}$ adapted to $\{\mathcal{F}_t\}$. For an $\mathcal{F}_t$-adapted process $f$ satisfying $\mathbb{E}\!\left[\int_0^T |f_s|^2\, ds\right] < \infty$, the It\^{o} integral
+Consider an $r$-dimensional Wiener process $B = \{B_\tau\}_{\tau \geq 0}$ adapted to $\{\mathcal{G}_\tau\}$. For a $\mathcal{G}_\tau$-adapted process $\phi$ satisfying $\mathbb{E}\!\left[\int_0^{\mathscr{T}} |\phi_u|^2\, du\right] < \infty$, the It\^{o} integral
 \begin{equation}\label{eq:ito_integral}
-  I(f) = \int_0^T f_s\, dW_s
+  \mathcal{J}(\phi) = \int_0^{\mathscr{T}} \phi_u\, dB_u
 \end{equation}
-is well defined as an $L^2$ limit of Riemann-type sums \cite{ito1951}. The resulting process is a martingale with quadratic variation $\langle I(f) \rangle_T = \int_0^T |f_s|^2\, ds$.
+is well defined as an $L^2$ limit of Riemann-type sums \cite{ito1951}. The resulting process is a martingale with quadratic variation $\langle \mathcal{J}(\phi) \rangle_{\mathscr{T}} = \int_0^{\mathscr{T}} |\phi_u|^2\, du$.
 
-A key distinction from the Stratonovich integral \cite{stratonovich1966} arises via the It\^{o} formula: for $g \in C^2(\mathbb{R}^d)$ and an It\^{o} process $X_t$ satisfying
+A key distinction from the Stratonovich integral \cite{stratonovich1966} arises via the It\^{o} formula: for $\psi \in C^2(\mathbb{R}^r)$ and an It\^{o} process $\Theta_\tau$ satisfying
 \begin{equation}\label{eq:general_sde}
-  dX_t = \mu(X_t, t)\, dt + \sigma(X_t, t)\, dW_t,
+  d\Theta_\tau = \mathfrak{a}(\Theta_\tau, \tau)\, d\tau + \mathfrak{b}(\Theta_\tau, \tau)\, dB_\tau,
 \end{equation}
 we have
 \begin{equation}\label{eq:ito_formula}
-  dg(X_t) = \left(\frac{\partial g}{\partial t} + \mathcal{L}g\right) dt + \nabla g \cdot \sigma\, dW_t,
+  d\psi(\Theta_\tau) = \left(\frac{\partial \psi}{\partial \tau} + \mathcal{A}\psi\right) d\tau + \nabla \psi \cdot \mathfrak{b}\, dB_\tau,
 \end{equation}
-where $\mathcal{L}$ is the infinitesimal generator
+where $\mathcal{A}$ is the infinitesimal generator
 \begin{equation}\label{eq:generator}
-  \mathcal{L}g = \mu \cdot \nabla g + \frac{1}{2}\text{tr}\!\left(\sigma \sigma^{\!\top} \nabla^2 g\right).
+  \mathcal{A}\psi = \mathfrak{a} \cdot \nabla \psi + \frac{1}{2}\text{tr}\!\left(\mathfrak{b} \mathfrak{b}^{\!\top} \nabla^2 \psi\right).
 \end{equation}
 
 \subsection{The Fokker--Planck Equation}
 
-The probability density $p(x,t)$ of $X_t$ evolves according to the Fokker--Planck (or forward Kolmogorov) equation \cite{fokker1914, planck1917}:
+The probability density $\varphi(z,\tau)$ of $\Theta_\tau$ evolves according to the Fokker--Planck (or forward Kolmogorov) equation \cite{fokker1914, planck1917}:
 \begin{equation}\label{eq:fokker_planck}
-  \frac{\partial p}{\partial t} = -\nabla \cdot (\mu\, p) + \frac{1}{2}\nabla \cdot \nabla \cdot (D\, p),
+  \frac{\partial \varphi}{\partial \tau} = -\nabla \cdot (\mathfrak{a}\, \varphi) + \frac{1}{2}\nabla \cdot \nabla \cdot (\mathfrak{D}\, \varphi),
 \end{equation}
-where $D = \sigma\sigma^{\!\top}$ is the diffusion tensor. For the Langevin diffusion \eqref{eq:langevin}, $\mu = \nabla \log \pi$ and $D = 2I_d$, yielding
+where $\mathfrak{D} = \mathfrak{b}\mathfrak{b}^{\!\top}$ is the diffusion tensor. For the Langevin diffusion \eqref{eq:langevin}, $\mathfrak{a} = \nabla \log \varrho$ and $\mathfrak{D} = 2I_r$, yielding
 \begin{equation}\label{eq:fp_langevin}
-  \frac{\partial p}{\partial t} = -\nabla \cdot \left(p\, \nabla \log \pi\right) + \Delta p.
+  \frac{\partial \varphi}{\partial \tau} = -\nabla \cdot \left(\varphi\, \nabla \log \varrho\right) + \Delta \varphi.
 \end{equation}
-Setting the left-hand side to zero confirms that $p = \pi$ is a stationary solution, consistent with detailed balance.
+Setting the left-hand side to zero confirms that $\varphi = \varrho$ is a stationary solution, consistent with detailed balance.
 
 %% ============================================================
 \section{Discretization and Ergodicity}
@@ -97,45 +97,45 @@ Setting the left-hand side to zero confirms that $p = \pi$ is a stationary solut
 
 Practical implementation of Langevin-based samplers requires temporal discretization of \eqref{eq:langevin}. The simplest approach is the Euler--Maruyama scheme \cite{kloeden1992}:
 \begin{equation}\label{eq:euler_maruyama}
-  X_{k+1} = X_k + h\, \nabla \log \pi(X_k) + \sqrt{2h}\, Z_k,
+  \Theta_{n+1} = \Theta_n + \eta\, \nabla \log \varrho(\Theta_n) + \sqrt{2\eta}\, \xi_n,
 \end{equation}
-where $h > 0$ is the step size and $Z_k \sim \mathcal{N}(0, I_d)$ are independent standard normal vectors. This defines a discrete-time Markov chain commonly known as the unadjusted Langevin algorithm (ULA).
+where $\eta > 0$ is the step size and $\xi_n \sim \mathcal{N}(0, I_r)$ are independent standard normal vectors. This defines a discrete-time Markov chain commonly known as the unadjusted Langevin algorithm (ULA).
 
 \subsection{Strong and Weak Error Analysis}
 
-The strong error of the Euler--Maruyama scheme is well known to be $\mathcal{O}(\sqrt{h})$ for SDEs with globally Lipschitz coefficients \cite{kloeden1992}. When the drift $\nabla \log \pi$ is not globally Lipschitz---as occurs for heavy-tailed targets---the standard analysis breaks down. Talay and Tubaro \cite{talay1990} showed that the weak error remains $\mathcal{O}(h)$ under polynomial growth conditions on the drift.
+The strong error of the Euler--Maruyama scheme is well known to be $\mathcal{O}(\sqrt{\eta})$ for SDEs with globally Lipschitz coefficients \cite{kloeden1992}. When the drift $\nabla \log \varrho$ is not globally Lipschitz---as occurs for heavy-tailed targets---the standard analysis breaks down. Talay and Tubaro \cite{talay1990} showed that the weak error remains $\mathcal{O}(\eta)$ under polynomial growth conditions on the drift.
 
-The Milstein scheme improves strong convergence to $\mathcal{O}(h)$ by incorporating the L\'{e}vy area correction:
+The Milstein scheme improves strong convergence to $\mathcal{O}(\eta)$ by incorporating the L\'{e}vy area correction:
 \begin{equation}\label{eq:milstein}
-  X_{k+1} = X_k + h\, \mu_k + \sigma_k \Delta W_k + \frac{1}{2}\sigma_k \sigma_k' \left((\Delta W_k)^2 - h\right),
+  \Theta_{n+1} = \Theta_n + \eta\, \mathfrak{a}_n + \mathfrak{b}_n \Delta B_n + \frac{1}{2}\mathfrak{b}_n \mathfrak{b}_n' \left((\Delta B_n)^2 - \eta\right),
 \end{equation}
-where $\Delta W_k = \sqrt{h}\, Z_k$ and primes denote derivatives with respect to the state variable.
+where $\Delta B_n = \sqrt{\eta}\, \xi_n$ and primes denote derivatives with respect to the state variable.
 
 \subsection{Ergodic Properties of the Discrete Chain}
 
-A fundamental question is whether the Markov chain $\{X_k\}$ defined by \eqref{eq:euler_maruyama} admits a unique invariant measure $\pi_h$ and, if so, how close $\pi_h$ is to $\pi$. The following conditions suffice \cite{ross2014, norris1997}:
+A fundamental question is whether the Markov chain $\{\Theta_n\}$ defined by \eqref{eq:euler_maruyama} admits a unique invariant measure $\varrho_\eta$ and, if so, how close $\varrho_\eta$ is to $\varrho$. The following conditions suffice \cite{ross2014, norris1997}:
 
 \begin{enumerate}
-  \item \textbf{Dissipativity:} There exist constants $a > 0$ and $b \geq 0$ such that
+  \item \textbf{Dissipativity:} There exist constants $\mathfrak{c} > 0$ and $\mathfrak{d} \geq 0$ such that
   \begin{equation}
-    \langle x, \nabla \log \pi(x)\rangle \leq -a|x|^2 + b \quad \forall\, x \in \mathbb{R}^d.
+    \langle z, \nabla \log \varrho(z)\rangle \leq -\mathfrak{c}|z|^2 + \mathfrak{d} \quad \forall\, z \in \mathbb{R}^r.
   \end{equation}
-  \item \textbf{Smoothness:} $\nabla \log \pi$ is locally Lipschitz with at most polynomial growth at infinity.
-  \item \textbf{Step size bound:} $h < 2a^{-1}$ (to prevent divergence of the discrete dynamics).
+  \item \textbf{Smoothness:} $\nabla \log \varrho$ is locally Lipschitz with at most polynomial growth at infinity.
+  \item \textbf{Step size bound:} $\eta < 2\mathfrak{c}^{-1}$ (to prevent divergence of the discrete dynamics).
 \end{enumerate}
 
-Under these conditions, $\pi_h$ exists and satisfies $W_2(\pi_h, \pi) = \mathcal{O}(h)$ in Wasserstein-2 distance, where
+Under these conditions, $\varrho_\eta$ exists and satisfies $\mathfrak{W}_2(\varrho_\eta, \varrho) = \mathcal{O}(\eta)$ in Wasserstein-2 distance, where
 \begin{equation}\label{eq:wasserstein}
-  W_2(\mu, \nu) = \left(\inf_{\gamma \in \Gamma(\mu,\nu)} \int |x - y|^2\, d\gamma(x,y)\right)^{1/2}.
+  \mathfrak{W}_2(\mathfrak{m}, \mathfrak{n}) = \left(\inf_{\zeta \in \mathcal{Z}(\mathfrak{m},\mathfrak{n})} \int |z - w|^2\, d\zeta(z,w)\right)^{1/2}.
 \end{equation}
 
 \subsection{Metropolis Adjustment}
 
-The Metropolis-adjusted Langevin algorithm (MALA) corrects the discretization bias by applying an accept-reject step. Given a proposal $Y_{k+1}$ from \eqref{eq:euler_maruyama}, we accept with probability
+The Metropolis-adjusted Langevin algorithm (MALA) corrects the discretization bias by applying an accept-reject step. Given a proposal $\widetilde{\Theta}_{n+1}$ from \eqref{eq:euler_maruyama}, we accept with probability
 \begin{equation}\label{eq:mala}
-  \alpha(X_k, Y_{k+1}) = 1 \wedge \frac{\pi(Y_{k+1})\, q(Y_{k+1} \to X_k)}{\pi(X_k)\, q(X_k \to Y_{k+1})},
+  \mathfrak{p}(\Theta_n, \widetilde{\Theta}_{n+1}) = 1 \wedge \frac{\varrho(\widetilde{\Theta}_{n+1})\, \mathfrak{q}(\widetilde{\Theta}_{n+1} \to \Theta_n)}{\varrho(\Theta_n)\, \mathfrak{q}(\Theta_n \to \widetilde{\Theta}_{n+1})},
 \end{equation}
-where $q(x \to y)$ is the Gaussian transition density of \eqref{eq:euler_maruyama}. MALA preserves $\pi$ exactly at the cost of occasional rejections.
+where $\mathfrak{q}(z \to w)$ is the Gaussian transition density of \eqref{eq:euler_maruyama}. MALA preserves $\varrho$ exactly at the cost of occasional rejections.
 
 %% ============================================================
 \section{Main Convergence Results}
@@ -151,48 +151,48 @@ We now state our principal results on the convergence of ULA and MALA to the tar
 \toprule
 \textbf{Method} & \textbf{Bias} & \textbf{Mixing} & \textbf{Cost/sample} \\
 \midrule
-ULA              & $\mathcal{O}(h)$           & $\mathcal{O}(d/h)$   & $\mathcal{O}(d)$   \\
-MALA             & $0$                         & $\mathcal{O}(d^{1/3})$ & $\mathcal{O}(d)$ \\
-Metropolis--Hastings & $0$                     & $\mathcal{O}(d)$     & $\mathcal{O}(d)$   \\
-Gibbs Sampler    & $0$                         & $\mathcal{O}(d^2)$   & $\mathcal{O}(d)$   \\
+ULA              & $\mathcal{O}(\eta)$          & $\mathcal{O}(r/\eta)$  & $\mathcal{O}(r)$   \\
+MALA             & $0$                           & $\mathcal{O}(r^{1/3})$ & $\mathcal{O}(r)$ \\
+Metropolis--Hastings & $0$                       & $\mathcal{O}(r)$       & $\mathcal{O}(r)$   \\
+Gibbs Sampler    & $0$                           & $\mathcal{O}(r^2)$     & $\mathcal{O}(r)$   \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{Theorem 1} (ULA Convergence). \textit{Suppose $\pi \propto e^{-U}$ where $U$ is $m$-strongly convex and $L$-smooth. Let $\kappa = L/m$ denote the condition number. Then the iterates of \eqref{eq:euler_maruyama} with step size $h \leq 2/(m+L)$ satisfy}
+\textbf{Theorem 1} (ULA Convergence). \textit{Suppose $\varrho \propto e^{-\Psi}$ where $\Psi$ is $\lambda$-strongly convex and $\Lambda$-smooth. Let $\vartheta = \Lambda/\lambda$ denote the condition number. Then the iterates of \eqref{eq:euler_maruyama} with step size $\eta \leq 2/(\lambda+\Lambda)$ satisfy}
 \begin{equation}\label{eq:ula_bound}
-  W_2(p_k, \pi) \leq (1 - mh)^k W_2(p_0, \pi) + C_1 \sqrt{dh},
+  \mathfrak{W}_2(\varphi_n, \varrho) \leq (1 - \lambda\eta)^n \mathfrak{W}_2(\varphi_0, \varrho) + K_1 \sqrt{r\eta},
 \end{equation}
-\textit{where $C_1$ depends only on $\kappa$.}
+\textit{where $K_1$ depends only on $\vartheta$.}
 
-The first term represents geometric contraction of the initial error, while the second captures the irreducible discretization bias. To achieve $W_2(p_k, \pi) \leq \epsilon$, one requires $h = \mathcal{O}(\epsilon^2/d)$ and $k = \mathcal{O}(\kappa \log(W_2(p_0,\pi)/\epsilon))$ iterations, yielding a total gradient complexity of $\mathcal{O}(\kappa d / \epsilon^2)$.
+The first term represents geometric contraction of the initial error, while the second captures the irreducible discretization bias. To achieve $\mathfrak{W}_2(\varphi_n, \varrho) \leq \omega$, one requires $\eta = \mathcal{O}(\omega^2/r)$ and $n = \mathcal{O}(\vartheta \log(\mathfrak{W}_2(\varphi_0,\varrho)/\omega))$ iterations, yielding a total gradient complexity of $\mathcal{O}(\vartheta r / \omega^2)$.
 
-\textbf{Theorem 2} (MALA Mixing Time). \textit{Under the same assumptions as Theorem~1, the MALA chain with optimal step size $h^* = \mathcal{O}(d^{-1/3})$ achieves}
+\textbf{Theorem 2} (MALA Mixing Time). \textit{Under the same assumptions as Theorem~1, the MALA chain with optimal step size $\eta^* = \mathcal{O}(r^{-1/3})$ achieves}
 \begin{equation}\label{eq:mala_mixing}
-  \|p_k - \pi\|_{\text{TV}} \leq \epsilon \quad \text{for } k = \mathcal{O}\!\left(\kappa\, d^{1/3} \log\frac{1}{\epsilon}\right).
+  \|\varphi_n - \varrho\|_{\text{TV}} \leq \omega \quad \text{for } n = \mathcal{O}\!\left(\vartheta\, r^{1/3} \log\frac{1}{\omega}\right).
 \end{equation}
 
 Table~\ref{tab:comparison} summarizes the asymptotic scaling of the four samplers considered in this work. The gradient information exploited by ULA and MALA provides a clear advantage in high dimensions, with MALA achieving the best dimension dependence among exact samplers.
 
-\textbf{Corollary 1.} \textit{For log-concave targets with bounded perturbations of the form $U(x) = U_0(x) + V(x)$ where $\|V\|_\infty \leq \delta$, the ULA bound \eqref{eq:ula_bound} degrades by at most an additive factor of $\mathcal{O}(\delta)$ in Wasserstein distance.}
+\textbf{Corollary 1.} \textit{For log-concave targets with bounded perturbations of the form $\Psi(z) = \Psi_0(z) + \Upsilon(z)$ where $\|\Upsilon\|_\infty \leq \mathfrak{e}$, the ULA bound \eqref{eq:ula_bound} degrades by at most an additive factor of $\mathcal{O}(\mathfrak{e})$ in Wasserstein distance.}
 
 %% ============================================================
 \section{Numerical Experiments}
 \label{sec:numerical}
 
-We validate the theoretical predictions on three canonical target distributions in dimensions $d \in \{10, 50, 100, 500\}$.
+We validate the theoretical predictions on three canonical target distributions in dimensions $r \in \{10, 50, 100, 500\}$.
 
 \subsection{Gaussian Target}
 
-The simplest test case is $\pi = \mathcal{N}(0, \Sigma)$ with $\Sigma = \text{diag}(1, 2, \ldots, d)$, giving condition number $\kappa = d$. Figure~\ref{fig:placeholder1} would show the Wasserstein distance $W_2(p_k, \pi)$ as a function of iteration $k$ for various step sizes $h$. The geometric contraction rate $(1 - h)^k$ matches the theoretical prediction of Theorem~1.
+The simplest test case is $\varrho = \mathcal{N}(0, \mathbf{R})$ with $\mathbf{R} = \text{diag}(1, 2, \ldots, r)$, giving condition number $\vartheta = r$. Figure~\ref{fig:placeholder1} would show the Wasserstein distance $\mathfrak{W}_2(\varphi_n, \varrho)$ as a function of iteration $n$ for various step sizes $\eta$. The geometric contraction rate $(1 - \eta)^n$ matches the theoretical prediction of Theorem~1.
 
 \subsection{Double-Well Potential}
 
-We consider $U(x) = \frac{1}{4}|x|^4 - \frac{1}{2}|x|^2$, which induces a bimodal target. This violates the strong convexity assumption of Theorem~1, yet the dissipativity condition of Section~\ref{sec:discretization} holds. Empirically, ULA converges to a biased approximation of $\pi$, while MALA recovers the correct distribution. The mixing time scales significantly with the barrier height separating the two modes.
+We consider $\Psi(z) = \frac{1}{4}|z|^4 - \frac{1}{2}|z|^2$, which induces a bimodal target. This violates the strong convexity assumption of Theorem~1, yet the dissipativity condition of Section~\ref{sec:discretization} holds. Empirically, ULA converges to a biased approximation of $\varrho$, while MALA recovers the correct distribution. The mixing time scales significantly with the barrier height separating the two modes.
 
 \begin{table}[t]
 \centering
-\caption{Effective Sample Size Per Second (ESS/s) for $d=100$}
+\caption{Effective Sample Size Per Second (ESS/s) for $r=100$}
 \label{tab:ess}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
@@ -208,18 +208,18 @@ Gibbs   & $89.4$   & $8.1$   & $23.5$   \\
 
 \subsection{Rosenbrock Density}
 
-The Rosenbrock function $U(x) = \sum_{i=1}^{d-1}\left[100(x_{i+1} - x_i^2)^2 + (1 - x_i)^2\right]$ defines a banana-shaped distribution that challenges samplers due to strong correlations. Table~\ref{tab:ess} reports effective sample sizes per second for each method at $d = 100$.
+The Rosenbrock function $\Psi(z) = \sum_{i=1}^{r-1}\left[100(z_{i+1} - z_i^2)^2 + (1 - z_i)^2\right]$ defines a banana-shaped distribution that challenges samplers due to strong correlations. Table~\ref{tab:ess} reports effective sample sizes per second for each method at $r = 100$.
 
 The results confirm the scaling predictions of Table~\ref{tab:comparison}. MALA consistently achieves the highest ESS/s across all three targets, with the advantage becoming more pronounced for the correlated Rosenbrock density. The random-walk Metropolis--Hastings (MH-RW) and Gibbs samplers suffer from poor scaling, particularly in the double-well case where inter-mode transitions are rare.
 
 \subsection{Dimensional Scaling}
 
-To examine the dependence on $d$, we fix $\epsilon = 0.1$ and measure the number of iterations required by each method to achieve $W_2(p_k, \pi) \leq \epsilon$ for the Gaussian target. The empirical scaling exponents are:
+To examine the dependence on $r$, we fix $\omega = 0.1$ and measure the number of iterations required by each method to achieve $\mathfrak{W}_2(\varphi_n, \varrho) \leq \omega$ for the Gaussian target. The empirical scaling exponents are:
 \begin{itemize}
-  \item ULA: $k \propto d^{1.03 \pm 0.05}$, consistent with $\mathcal{O}(d)$.
-  \item MALA: $k \propto d^{0.35 \pm 0.04}$, consistent with $\mathcal{O}(d^{1/3})$.
-  \item MH-RW: $k \propto d^{0.98 \pm 0.06}$, consistent with $\mathcal{O}(d)$.
-  \item Gibbs: $k \propto d^{1.95 \pm 0.08}$, consistent with $\mathcal{O}(d^2)$.
+  \item ULA: $n \propto r^{1.03 \pm 0.05}$, consistent with $\mathcal{O}(r)$.
+  \item MALA: $n \propto r^{0.35 \pm 0.04}$, consistent with $\mathcal{O}(r^{1/3})$.
+  \item MH-RW: $n \propto r^{0.98 \pm 0.06}$, consistent with $\mathcal{O}(r)$.
+  \item Gibbs: $n \propto r^{1.95 \pm 0.08}$, consistent with $\mathcal{O}(r^2)$.
 \end{itemize}
 These findings are in excellent agreement with the asymptotic rates of Table~\ref{tab:comparison}.
 
