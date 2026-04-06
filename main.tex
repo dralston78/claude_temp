@@ -53,31 +53,6 @@ where $W_t$ denotes a standard $d$-dimensional Wiener process and $\pi$ is the t
 The remainder of this paper is organized as follows. Section~\ref{sec:preliminaries} reviews essential background on filtered probability spaces, It\^{o} integrals, and the Fokker--Planck equation. Section~\ref{sec:discretization} analyzes discretization schemes for \eqref{eq:langevin} and their ergodic properties. Section~\ref{sec:convergence} presents our main convergence results. Section~\ref{sec:numerical} provides numerical experiments, and Section~\ref{sec:conclusion} concludes.
 
 %% ============================================================
-\section{Preliminaries and Notation}
-\label{sec:preliminaries}
-
-Let $(\Omega, \mathcal{F}, \{\mathcal{F}_t\}_{t \geq 0}, \mathbb{P})$ be a filtered probability space satisfying the usual conditions of right-continuity and completeness \cite{karlin1975}. We denote by $L^2(\Omega)$ the space of square-integrable random variables and by $\mathcal{B}(\mathbb{R}^d)$ the Borel $\sigma$-algebra on $\mathbb{R}^d$.
-
-\subsection{It\^{o} Stochastic Integrals}
-
-Consider a $d$-dimensional Wiener process $W = \{W_t\}_{t \geq 0}$ adapted to $\{\mathcal{F}_t\}$. For an $\mathcal{F}_t$-adapted process $f$ satisfying $\mathbb{E}\!\left[\int_0^T |f_s|^2\, ds\right] < \infty$, the It\^{o} integral
-\begin{equation}\label{eq:ito_integral}
-  I(f) = \int_0^T f_s\, dW_s
-\end{equation}
-is well defined as an $L^2$ limit of Riemann-type sums \cite{ito1951}. The resulting process is a martingale with quadratic variation $\langle I(f) \rangle_T = \int_0^T |f_s|^2\, ds$.
-
-A key distinction from the Stratonovich integral \cite{stratonovich1966} arises via the It\^{o} formula: for $g \in C^2(\mathbb{R}^d)$ and an It\^{o} process $X_t$ satisfying
-\begin{equation}\label{eq:general_sde}
-  dX_t = \mu(X_t, t)\, dt + \sigma(X_t, t)\, dW_t,
-\end{equation}
-we have
-\begin{equation}\label{eq:ito_formula}
-  dg(X_t) = \left(\frac{\partial g}{\partial t} + \mathcal{L}g\right) dt + \nabla g \cdot \sigma\, dW_t,
-\end{equation}
-where $\mathcal{L}$ is the infinitesimal generator
-\begin{equation}\label{eq:generator}
-  \mathcal{L}g = \mu \cdot \nabla g + \frac{1}{2}\text{tr}\!\left(\sigma \sigma^{\!\top} \nabla^2 g\right).
-\end{equation}
 
 \subsection{The Fokker--Planck Equation}
 
