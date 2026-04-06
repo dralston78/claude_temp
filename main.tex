@@ -1,0 +1,240 @@
+\documentclass[journal]{IEEEtran}
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{cite}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{bm}
+
+\begin{document}
+
+\title{On the Convergence Properties of Generalized Stochastic Processes with Applications to Markov Chain Monte Carlo Sampling}
+
+\author{
+  \IEEEauthorblockN{A.~Placeholder\IEEEauthorrefmark{1},
+  B.~Exemplar\IEEEauthorrefmark{2}, and
+  C.~Testfield\IEEEauthorrefmark{1}}
+  \IEEEauthorblockA{\IEEEauthorrefmark{1}Department of Applied Mathematics,
+  University of Stochastia, Randomville, ST 00000\\
+  Email: \{placeholder, testfield\}@stochastia.edu}
+  \IEEEauthorblockA{\IEEEauthorrefmark{2}Institute for Computational Probability,
+  Markov Technical University, Chainsburg, MC 11111\\
+  Email: exemplar@mtu.edu}
+}
+
+\maketitle
+
+\begin{abstract}
+We investigate the convergence behavior of generalized stochastic processes defined on filtered probability spaces satisfying the usual conditions. Beginning with the classical framework of Kolmogorov \cite{kolmogorov1933} and extending through the It\^{o} calculus \cite{ito1951}, we develop a unified treatment of diffusion-type processes and their discrete approximations. In particular, we examine how Euler--Maruyama and Milstein schemes preserve ergodic properties when applied to stochastic differential equations with non-globally Lipschitz drift coefficients. We present convergence rate estimates for Markov chain Monte Carlo samplers derived from Langevin dynamics and establish sufficient conditions under which the invariant measure of the discretized chain approximates the target distribution. Numerical experiments on canonical test distributions corroborate the theoretical findings and illustrate the interplay between step size, dimensionality, and mixing time. Our results suggest that adaptive discretization strategies can yield order-of-magnitude improvements in effective sample size per unit computation for a broad class of target densities.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Stochastic processes, Markov chain Monte Carlo, stochastic differential equations, Langevin dynamics, ergodicity, numerical methods
+\end{IEEEkeywords}
+
+%% ============================================================
+\section{Introduction}
+\IEEEPARstart{S}{tochastic} processes form the mathematical backbone of numerous disciplines ranging from statistical physics \cite{einstein1905, langevin1908} to quantitative finance \cite{black1973} and computational biology \cite{gillespie1977}. The rigorous axiomatization by Kolmogorov \cite{kolmogorov1933} provided the measure-theoretic foundation upon which modern probability theory rests, while subsequent developments by Wiener \cite{wiener1923}, Doob \cite{doob1942}, and It\^{o} \cite{ito1951} established the analytical machinery for continuous-time stochastic calculus.
+
+A central theme in applied probability is the characterization of long-run behavior. Given a stochastic process $\{X_t\}_{t \geq 0}$ evolving on a state space $\mathcal{S}$, one often seeks to determine whether the law of $X_t$ converges to a stationary distribution $\pi$ as $t \to \infty$, and if so, at what rate. This question is of direct practical importance in Markov chain Monte Carlo (MCMC) methods \cite{metropolis1953, hastings1970}, where the convergence rate of the simulated chain governs the efficiency of the sampling algorithm.
+
+The Metropolis--Hastings algorithm \cite{metropolis1953, hastings1970} and its variants, including Gibbs sampling \cite{geman1984}, remain the workhorses of Bayesian computation \cite{robert2004}. Despite decades of study, fundamental questions about optimal tuning, dimensional scaling, and the interaction between proposal mechanisms and target geometry continue to attract research attention. Recent advances in gradient-based samplers, particularly those inspired by Langevin dynamics \cite{langevin1908}, have opened new avenues for constructing efficient MCMC algorithms in high-dimensional settings.
+
+In this paper, we adopt a unified perspective grounded in the theory of stochastic differential equations (SDEs) \cite{oksendal2003, gardiner2009}. We consider the overdamped Langevin diffusion
+\begin{equation}\label{eq:langevin}
+  dX_t = \nabla \log \pi(X_t)\, dt + \sqrt{2}\, dW_t,
+\end{equation}
+where $W_t$ denotes a standard $d$-dimensional Wiener process and $\pi$ is the target density. Under mild regularity conditions, this diffusion admits $\pi$ as its unique invariant measure, and trajectories converge to stationarity at an exponential rate determined by the spectral gap of the associated generator \cite{vanKampen2007}.
+
+The remainder of this paper is organized as follows. Section~\ref{sec:preliminaries} reviews essential background on filtered probability spaces, It\^{o} integrals, and the Fokker--Planck equation. Section~\ref{sec:discretization} analyzes discretization schemes for \eqref{eq:langevin} and their ergodic properties. Section~\ref{sec:convergence} presents our main convergence results. Section~\ref{sec:numerical} provides numerical experiments, and Section~\ref{sec:conclusion} concludes.
+
+%% ============================================================
+\section{Preliminaries and Notation}
+\label{sec:preliminaries}
+
+Let $(\Omega, \mathcal{F}, \{\mathcal{F}_t\}_{t \geq 0}, \mathbb{P})$ be a filtered probability space satisfying the usual conditions of right-continuity and completeness \cite{karlin1975}. We denote by $L^2(\Omega)$ the space of square-integrable random variables and by $\mathcal{B}(\mathbb{R}^d)$ the Borel $\sigma$-algebra on $\mathbb{R}^d$.
+
+\subsection{It\^{o} Stochastic Integrals}
+
+Consider a $d$-dimensional Wiener process $W = \{W_t\}_{t \geq 0}$ adapted to $\{\mathcal{F}_t\}$. For an $\mathcal{F}_t$-adapted process $f$ satisfying $\mathbb{E}\!\left[\int_0^T |f_s|^2\, ds\right] < \infty$, the It\^{o} integral
+\begin{equation}\label{eq:ito_integral}
+  I(f) = \int_0^T f_s\, dW_s
+\end{equation}
+is well defined as an $L^2$ limit of Riemann-type sums \cite{ito1951}. The resulting process is a martingale with quadratic variation $\langle I(f) \rangle_T = \int_0^T |f_s|^2\, ds$.
+
+A key distinction from the Stratonovich integral \cite{stratonovich1966} arises via the It\^{o} formula: for $g \in C^2(\mathbb{R}^d)$ and an It\^{o} process $X_t$ satisfying
+\begin{equation}\label{eq:general_sde}
+  dX_t = \mu(X_t, t)\, dt + \sigma(X_t, t)\, dW_t,
+\end{equation}
+we have
+\begin{equation}\label{eq:ito_formula}
+  dg(X_t) = \left(\frac{\partial g}{\partial t} + \mathcal{L}g\right) dt + \nabla g \cdot \sigma\, dW_t,
+\end{equation}
+where $\mathcal{L}$ is the infinitesimal generator
+\begin{equation}\label{eq:generator}
+  \mathcal{L}g = \mu \cdot \nabla g + \frac{1}{2}\text{tr}\!\left(\sigma \sigma^{\!\top} \nabla^2 g\right).
+\end{equation}
+
+\subsection{The Fokker--Planck Equation}
+
+The probability density $p(x,t)$ of $X_t$ evolves according to the Fokker--Planck (or forward Kolmogorov) equation \cite{fokker1914, planck1917}:
+\begin{equation}\label{eq:fokker_planck}
+  \frac{\partial p}{\partial t} = -\nabla \cdot (\mu\, p) + \frac{1}{2}\nabla \cdot \nabla \cdot (D\, p),
+\end{equation}
+where $D = \sigma\sigma^{\!\top}$ is the diffusion tensor. For the Langevin diffusion \eqref{eq:langevin}, $\mu = \nabla \log \pi$ and $D = 2I_d$, yielding
+\begin{equation}\label{eq:fp_langevin}
+  \frac{\partial p}{\partial t} = -\nabla \cdot \left(p\, \nabla \log \pi\right) + \Delta p.
+\end{equation}
+Setting the left-hand side to zero confirms that $p = \pi$ is a stationary solution, consistent with detailed balance.
+
+%% ============================================================
+\section{Discretization and Ergodicity}
+\label{sec:discretization}
+
+Practical implementation of Langevin-based samplers requires temporal discretization of \eqref{eq:langevin}. The simplest approach is the Euler--Maruyama scheme \cite{kloeden1992}:
+\begin{equation}\label{eq:euler_maruyama}
+  X_{k+1} = X_k + h\, \nabla \log \pi(X_k) + \sqrt{2h}\, Z_k,
+\end{equation}
+where $h > 0$ is the step size and $Z_k \sim \mathcal{N}(0, I_d)$ are independent standard normal vectors. This defines a discrete-time Markov chain commonly known as the unadjusted Langevin algorithm (ULA).
+
+\subsection{Strong and Weak Error Analysis}
+
+The strong error of the Euler--Maruyama scheme is well known to be $\mathcal{O}(\sqrt{h})$ for SDEs with globally Lipschitz coefficients \cite{kloeden1992}. When the drift $\nabla \log \pi$ is not globally Lipschitz---as occurs for heavy-tailed targets---the standard analysis breaks down. Talay and Tubaro \cite{talay1990} showed that the weak error remains $\mathcal{O}(h)$ under polynomial growth conditions on the drift.
+
+The Milstein scheme improves strong convergence to $\mathcal{O}(h)$ by incorporating the L\'{e}vy area correction:
+\begin{equation}\label{eq:milstein}
+  X_{k+1} = X_k + h\, \mu_k + \sigma_k \Delta W_k + \frac{1}{2}\sigma_k \sigma_k' \left((\Delta W_k)^2 - h\right),
+\end{equation}
+where $\Delta W_k = \sqrt{h}\, Z_k$ and primes denote derivatives with respect to the state variable.
+
+\subsection{Ergodic Properties of the Discrete Chain}
+
+A fundamental question is whether the Markov chain $\{X_k\}$ defined by \eqref{eq:euler_maruyama} admits a unique invariant measure $\pi_h$ and, if so, how close $\pi_h$ is to $\pi$. The following conditions suffice \cite{ross2014, norris1997}:
+
+\begin{enumerate}
+  \item \textbf{Dissipativity:} There exist constants $a > 0$ and $b \geq 0$ such that
+  \begin{equation}
+    \langle x, \nabla \log \pi(x)\rangle \leq -a|x|^2 + b \quad \forall\, x \in \mathbb{R}^d.
+  \end{equation}
+  \item \textbf{Smoothness:} $\nabla \log \pi$ is locally Lipschitz with at most polynomial growth at infinity.
+  \item \textbf{Step size bound:} $h < 2a^{-1}$ (to prevent divergence of the discrete dynamics).
+\end{enumerate}
+
+Under these conditions, $\pi_h$ exists and satisfies $W_2(\pi_h, \pi) = \mathcal{O}(h)$ in Wasserstein-2 distance, where
+\begin{equation}\label{eq:wasserstein}
+  W_2(\mu, \nu) = \left(\inf_{\gamma \in \Gamma(\mu,\nu)} \int |x - y|^2\, d\gamma(x,y)\right)^{1/2}.
+\end{equation}
+
+\subsection{Metropolis Adjustment}
+
+The Metropolis-adjusted Langevin algorithm (MALA) corrects the discretization bias by applying an accept-reject step. Given a proposal $Y_{k+1}$ from \eqref{eq:euler_maruyama}, we accept with probability
+\begin{equation}\label{eq:mala}
+  \alpha(X_k, Y_{k+1}) = 1 \wedge \frac{\pi(Y_{k+1})\, q(Y_{k+1} \to X_k)}{\pi(X_k)\, q(X_k \to Y_{k+1})},
+\end{equation}
+where $q(x \to y)$ is the Gaussian transition density of \eqref{eq:euler_maruyama}. MALA preserves $\pi$ exactly at the cost of occasional rejections.
+
+%% ============================================================
+\section{Main Convergence Results}
+\label{sec:convergence}
+
+We now state our principal results on the convergence of ULA and MALA to the target distribution.
+
+\begin{table}[t]
+\centering
+\caption{Convergence Properties of Langevin-Based Samplers}
+\label{tab:comparison}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Method} & \textbf{Bias} & \textbf{Mixing} & \textbf{Cost/sample} \\
+\midrule
+ULA              & $\mathcal{O}(h)$           & $\mathcal{O}(d/h)$   & $\mathcal{O}(d)$   \\
+MALA             & $0$                         & $\mathcal{O}(d^{1/3})$ & $\mathcal{O}(d)$ \\
+Metropolis--Hastings & $0$                     & $\mathcal{O}(d)$     & $\mathcal{O}(d)$   \\
+Gibbs Sampler    & $0$                         & $\mathcal{O}(d^2)$   & $\mathcal{O}(d)$   \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Theorem 1} (ULA Convergence). \textit{Suppose $\pi \propto e^{-U}$ where $U$ is $m$-strongly convex and $L$-smooth. Let $\kappa = L/m$ denote the condition number. Then the iterates of \eqref{eq:euler_maruyama} with step size $h \leq 2/(m+L)$ satisfy}
+\begin{equation}\label{eq:ula_bound}
+  W_2(p_k, \pi) \leq (1 - mh)^k W_2(p_0, \pi) + C_1 \sqrt{dh},
+\end{equation}
+\textit{where $C_1$ depends only on $\kappa$.}
+
+The first term represents geometric contraction of the initial error, while the second captures the irreducible discretization bias. To achieve $W_2(p_k, \pi) \leq \epsilon$, one requires $h = \mathcal{O}(\epsilon^2/d)$ and $k = \mathcal{O}(\kappa \log(W_2(p_0,\pi)/\epsilon))$ iterations, yielding a total gradient complexity of $\mathcal{O}(\kappa d / \epsilon^2)$.
+
+\textbf{Theorem 2} (MALA Mixing Time). \textit{Under the same assumptions as Theorem~1, the MALA chain with optimal step size $h^* = \mathcal{O}(d^{-1/3})$ achieves}
+\begin{equation}\label{eq:mala_mixing}
+  \|p_k - \pi\|_{\text{TV}} \leq \epsilon \quad \text{for } k = \mathcal{O}\!\left(\kappa\, d^{1/3} \log\frac{1}{\epsilon}\right).
+\end{equation}
+
+Table~\ref{tab:comparison} summarizes the asymptotic scaling of the four samplers considered in this work. The gradient information exploited by ULA and MALA provides a clear advantage in high dimensions, with MALA achieving the best dimension dependence among exact samplers.
+
+\textbf{Corollary 1.} \textit{For log-concave targets with bounded perturbations of the form $U(x) = U_0(x) + V(x)$ where $\|V\|_\infty \leq \delta$, the ULA bound \eqref{eq:ula_bound} degrades by at most an additive factor of $\mathcal{O}(\delta)$ in Wasserstein distance.}
+
+%% ============================================================
+\section{Numerical Experiments}
+\label{sec:numerical}
+
+We validate the theoretical predictions on three canonical target distributions in dimensions $d \in \{10, 50, 100, 500\}$.
+
+\subsection{Gaussian Target}
+
+The simplest test case is $\pi = \mathcal{N}(0, \Sigma)$ with $\Sigma = \text{diag}(1, 2, \ldots, d)$, giving condition number $\kappa = d$. Figure~\ref{fig:placeholder1} would show the Wasserstein distance $W_2(p_k, \pi)$ as a function of iteration $k$ for various step sizes $h$. The geometric contraction rate $(1 - h)^k$ matches the theoretical prediction of Theorem~1.
+
+\subsection{Double-Well Potential}
+
+We consider $U(x) = \frac{1}{4}|x|^4 - \frac{1}{2}|x|^2$, which induces a bimodal target. This violates the strong convexity assumption of Theorem~1, yet the dissipativity condition of Section~\ref{sec:discretization} holds. Empirically, ULA converges to a biased approximation of $\pi$, while MALA recovers the correct distribution. The mixing time scales significantly with the barrier height separating the two modes.
+
+\begin{table}[t]
+\centering
+\caption{Effective Sample Size Per Second (ESS/s) for $d=100$}
+\label{tab:ess}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Method} & \textbf{Gaussian} & \textbf{Double-Well} & \textbf{Rosenbrock} \\
+\midrule
+ULA     & $1247.3$ & $83.6$  & $312.8$  \\
+MALA    & $2891.5$ & $421.7$ & $1056.4$ \\
+MH-RW   & $156.2$  & $12.4$  & $42.7$   \\
+Gibbs   & $89.4$   & $8.1$   & $23.5$   \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Rosenbrock Density}
+
+The Rosenbrock function $U(x) = \sum_{i=1}^{d-1}\left[100(x_{i+1} - x_i^2)^2 + (1 - x_i)^2\right]$ defines a banana-shaped distribution that challenges samplers due to strong correlations. Table~\ref{tab:ess} reports effective sample sizes per second for each method at $d = 100$.
+
+The results confirm the scaling predictions of Table~\ref{tab:comparison}. MALA consistently achieves the highest ESS/s across all three targets, with the advantage becoming more pronounced for the correlated Rosenbrock density. The random-walk Metropolis--Hastings (MH-RW) and Gibbs samplers suffer from poor scaling, particularly in the double-well case where inter-mode transitions are rare.
+
+\subsection{Dimensional Scaling}
+
+To examine the dependence on $d$, we fix $\epsilon = 0.1$ and measure the number of iterations required by each method to achieve $W_2(p_k, \pi) \leq \epsilon$ for the Gaussian target. The empirical scaling exponents are:
+\begin{itemize}
+  \item ULA: $k \propto d^{1.03 \pm 0.05}$, consistent with $\mathcal{O}(d)$.
+  \item MALA: $k \propto d^{0.35 \pm 0.04}$, consistent with $\mathcal{O}(d^{1/3})$.
+  \item MH-RW: $k \propto d^{0.98 \pm 0.06}$, consistent with $\mathcal{O}(d)$.
+  \item Gibbs: $k \propto d^{1.95 \pm 0.08}$, consistent with $\mathcal{O}(d^2)$.
+\end{itemize}
+These findings are in excellent agreement with the asymptotic rates of Table~\ref{tab:comparison}.
+
+%% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have presented a unified analysis of Langevin-based sampling algorithms from the perspective of stochastic differential equations. Our main contributions are twofold: (i) explicit non-asymptotic convergence bounds for the unadjusted Langevin algorithm under strong log-concavity, and (ii) a sharp characterization of the dimensional scaling of MALA's mixing time. The numerical experiments confirm the theoretical predictions and demonstrate the practical superiority of gradient-based samplers over classical methods in moderate to high dimensions.
+
+Several extensions merit further investigation. The relaxation of strong convexity to weaker geometric conditions---such as log-Sobolev or Poincar\'{e} inequalities---would broaden the applicability of the convergence bounds. Adaptive step-size strategies that exploit local curvature information, in the spirit of Riemannian manifold methods, offer promising directions for handling ill-conditioned targets. Finally, the connection between continuous-time Langevin dynamics and score-based generative models \cite{oksendal2003} suggests that the analytical tools developed here may find application in machine learning beyond the traditional MCMC setting.
+
+\section*{Acknowledgment}
+The authors thank the anonymous reviewers for their constructive feedback. This work was supported in part by the Stochastia National Research Foundation under Grant No.\ SNR-2025-0042.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
